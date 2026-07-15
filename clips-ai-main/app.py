@@ -203,7 +203,7 @@ def run_download(job_id, url, format_type):
     cmd += ['--extractor-args', 'youtube:player_client=web']
     cmd += ['--extractor-args', f'youtubepot-bgutilhttp:base_url={BGUTIL_POT_BASE_URL}']
     cmd += ['--plugin-embeds', 'bgutil-ytdlp-pot-provider']
-    cmd += ['--js-runtimes', 'youtubepot-bgutilhttp']
+    cmd += ['--js-runtimes', 'node:/usr/bin/node']
 
     if os.path.isfile(COOKIES_PATH):
         cmd += ['--cookies', COOKIES_PATH]
