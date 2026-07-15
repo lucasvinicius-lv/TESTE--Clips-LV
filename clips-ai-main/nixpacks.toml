@@ -1,3 +1,5 @@
 [providers]
-node = {}
 python = {}
+
+[phases.setup]
+nixPkgs = ["...", "nodejs"]
