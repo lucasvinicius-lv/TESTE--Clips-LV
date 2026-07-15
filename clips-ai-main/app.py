@@ -202,8 +202,9 @@ def run_download(job_id, url, format_type):
     cmd += ['--extractor-args', 'youtube:player_client=web']
     cmd += ['--extractor-args', f'youtubepot-bgutilhttp:base_url={BGUTIL_POT_BASE_URL}']
     #cmd += ['--js-runtimes', 'node']
-    cmd += ['--plugin-embeds', 'bgutil-ytdlp-pot-provider']
-    cmd += ['--js-runtimes', 'bgutil-ytdlp-pot-provider']
+    #cmd += ['--plugin-embeds', 'bgutil-ytdlp-pot-provider']
+    #cmd += ['--js-runtimes', 'bgutil-ytdlp-pot-provider']
+    cmd += ['--ignore-no-formats-error']
 
     if os.path.isfile(COOKIES_PATH):
         cmd += ['--cookies', COOKIES_PATH]
