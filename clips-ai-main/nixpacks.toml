@@ -1,3 +1,4 @@
+# Forçando rebuild sem cache
 [providers]
 python = {}
 
