@@ -205,6 +205,7 @@ def run_download(job_id, url, format_type):
     #cmd += ['--plugin-embeds', 'bgutil-ytdlp-pot-provider']
     #cmd += ['--js-runtimes', 'bgutil-ytdlp-pot-provider']
     cmd += ['--ignore-no-formats-error']
+    cmd += ['--js-runtimes', 'js2py']
 
     if os.path.isfile(COOKIES_PATH):
         cmd += ['--cookies', COOKIES_PATH]
