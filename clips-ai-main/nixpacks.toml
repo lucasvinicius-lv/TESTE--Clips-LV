@@ -1,6 +1,5 @@
-# Forçando rebuild sem cache
 [providers]
 python = {}
 
 [phases.setup]
-nixPkgs = ["python3", "nodejs"]
+nixPkgs = ["python3", "nodejs_20"]
