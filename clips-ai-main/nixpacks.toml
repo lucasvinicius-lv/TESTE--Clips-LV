@@ -2,4 +2,4 @@
 python = {}
 
 [phases.setup]
-nixPkgs = ["...", "nodejs"]
+nixPkgs = ["python3", "nodejs"]
