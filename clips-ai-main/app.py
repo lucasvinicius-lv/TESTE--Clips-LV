@@ -308,9 +308,13 @@ def health():
 
 @app.route('/download', methods=['POST'])
 def download():
-    data = request.get_json(silent=True) or {}
-    url = data.get('url', '').strip()
-    format_type = data.get('format', 'video')
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        url = (data.get('url') or '').strip()
+        format_type = data.get('format', 'video')
+    else:
+        url = (request.form.get('url') or '').strip()
+        format_type = request.form.get('format', 'video')
 
     if not url:
         return jsonify({'error': 'URL obrigatoria'}), 400
