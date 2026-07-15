@@ -211,7 +211,21 @@ def run_download(job_id, url, format_type):
     cmd.append(url)
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        logger.info("========== YT-DLP COMMAND ==========")
+        logger.info(" ".join(cmd))
+        logger.info("====================================")
+
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300
+        )
+
+        logger.info("YT-DLP return code: %s", result.returncode)
+        logger.info("STDOUT:\n%s", result.stdout)
+        logger.info("STDERR:\n%s", result.stderr)
+
         if result.returncode != 0:
             set_job(job_id, status='error', error=result.stderr[-500:])
             return
