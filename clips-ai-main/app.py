@@ -11,6 +11,7 @@ import time
 import uuid
 import json
 import requests
+import shutil
 
 
 from flask import Flask, request, jsonify, send_file, Response
@@ -281,20 +282,28 @@ def run_download(
         
         local_file = files[0]
         filename = os.path.basename(local_file)
+
         if not storage:
-            storage = {
-                "bucket": SUPABASE_STORAGE_BUCKET,
-                "objectName": filename,
-                "contentType": "audio/mpeg" if format_type == "audio" else "video/mp4",
-            }
+            raise RuntimeError("storage nao informado no payload")
+
+        upload = storage.get("upload")
+        if not upload:
+            raise RuntimeError("storage.upload nao informado")
+
+        headers = dict(upload.get("headers") or {})
+        headers.setdefault("Content-Type", storage["contentType"])
+
         with open(local_file, "rb") as f:
-            supabase.storage.from_(SUPABASE_STORAGE_BUCKET).upload(
-                path=storage["objectName"],
-                file=f,
-                file_options={
-                    "content-type": "audio/mpeg" if format_type == "audio" else "video/mp4",
-                    "upsert": "true",
-                },
+            response = requests.put(
+                upload["signedUrl"],
+                data=f,
+                headers=headers,
+                timeout=(30, 60 * 60),
+            )
+
+        if response.status_code not in (200, 201):
+            raise RuntimeError(
+                f"Signed upload falhou: HTTP {response.status_code} - {response.text[:300]}"
             )
 
         storage_result = {
@@ -310,11 +319,25 @@ def run_download(
             filename=filename,
             storage=storage_result,
         )
+
+       
       
     except subprocess.TimeoutExpired:
-        set_job(job_id, status='error', error='Download excedeu o tempo limite (5 min).')
+        set_job(
+            job_id,
+            status="error",
+            error="Download excedeu o tempo limite (5 min).",
+        )
+
     except Exception as e:
-        set_job(job_id, status='error', error=str(e))
+        set_job(
+            job_id,
+            status="error",
+            error=str(e),
+        )
+
+    finally:
+        shutil.rmtree(job_dir, ignore_errors=True)
 
 
 def extract_frames_from_video(video_path, output_dir):
@@ -391,6 +414,20 @@ def download():
         project_id = data.get("projectId")
         user_id = data.get("userId")
         youtube_id = data.get("youtubeId")
+        if storage:
+            upload = storage.get("upload")
+
+            if not upload:
+                return jsonify({"error": "storage.upload obrigatorio"}), 400
+
+            if upload.get("method") != "PUT":
+                return jsonify({"error": "storage.upload.method deve ser PUT"}), 400
+
+            if not upload.get("signedUrl"):
+                return jsonify({"error": "storage.upload.signedUrl obrigatorio"}), 400
+
+            if not isinstance(upload.get("headers"), dict):
+                return jsonify({"error": "storage.upload.headers obrigatorio"}), 400
     else:
         url = (request.form.get('url') or '').strip()
         format_type = request.form.get('format', 'video')
