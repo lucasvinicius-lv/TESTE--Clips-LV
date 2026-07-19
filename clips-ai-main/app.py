@@ -390,7 +390,8 @@ def download():
     if request.is_json:
         data = request.get_json(silent=True) or {}
         url = (data.get('url') or '').strip()
-        format_type = data.get('format', 'video')
+        audio_only = bool(data.get("audioOnly", False))
+        format_type = "audio" if audio_only else "video"
 
         storage = data.get("storage")
         project_id = data.get("projectId")
