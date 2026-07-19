@@ -131,13 +131,27 @@ def _init_jobs_db():
 _init_jobs_db()
 
 
-def set_job(job_id, status, filepath=None, filename=None, error=None):
+def set_job(
+    job_id,
+    status,
+    filepath=None,
+    filename=None,
+    error=None,
+    storage=None,
+):
     conn = _jobs_db()
     try:
         conn.execute(
-            'INSERT OR REPLACE INTO jobs (id, status, filepath, filename, error) '
-            'VALUES (?, ?, ?, ?, ?)',
-            (job_id, status, filepath, filename, error),
+            'INSERT OR REPLACE INTO jobs (id, status, filepath, filename, error, storage) '
+            'VALUES (?, ?, ?, ?, ?, ?)',
+            (
+                job_id,
+                status,
+                filepath,
+                filename,
+                error,
+                json.dumps(storage) if storage else None,
+            ),
         )
         conn.commit()
     finally:
