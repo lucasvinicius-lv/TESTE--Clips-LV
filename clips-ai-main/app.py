@@ -222,7 +222,15 @@ def cleanup_old_files():
 threading.Thread(target=cleanup_old_files, daemon=True).start()
 
 
-def run_download(job_id, url, format_type):
+def run_download(
+    job_id,
+    url,
+    format_type,
+    storage,
+    project_id,
+    user_id,
+    youtube_id,
+):
     job_dir = os.path.join(DOWNLOAD_DIR, job_id)
     os.makedirs(job_dir, exist_ok=True)
 
@@ -279,6 +287,35 @@ def run_download(job_id, url, format_type):
         
         local_file = files[0]
         filename = os.path.basename(local_file)
+        if not storage:
+            storage = {
+                "bucket": SUPABASE_STORAGE_BUCKET,
+                "objectName": filename,
+                "contentType": "audio/mpeg" if format_type == "audio" else "video/mp4",
+            }
+        with open(local_file, "rb") as f:
+            supabase.storage.from_(SUPABASE_STORAGE_BUCKET).upload(
+                path=storage["objectName"],
+                file=f,
+                file_options={
+                    "content-type": "audio/mpeg" if format_type == "audio" else "video/mp4",
+                    "upsert": "true",
+                },
+            )
+
+        storage_result = {
+            "bucket": storage["bucket"],
+            "objectName": storage["objectName"],
+            "size": os.path.getsize(local_file),
+            "contentType": storage["contentType"],
+        }
+
+        set_job(
+            job_id,
+            status="done",
+            filename=filename,
+            storage=storage_result,
+        )
       
     except subprocess.TimeoutExpired:
         set_job(job_id, status='error', error='Download excedeu o tempo limite (5 min).')
@@ -354,9 +391,19 @@ def download():
         data = request.get_json(silent=True) or {}
         url = (data.get('url') or '').strip()
         format_type = data.get('format', 'video')
+
+        storage = data.get("storage")
+        project_id = data.get("projectId")
+        user_id = data.get("userId")
+        youtube_id = data.get("youtubeId")
     else:
         url = (request.form.get('url') or '').strip()
         format_type = request.form.get('format', 'video')
+
+        storage = None
+        project_id = None
+        user_id = None
+        youtube_id = None
 
     if not url:
         return jsonify({'error': 'URL obrigatoria'}), 400
@@ -367,7 +414,18 @@ def download():
     job_id = uuid.uuid4().hex[:12]
     set_job(job_id, status='downloading')
 
-    thread = threading.Thread(target=run_download, args=(job_id, url, format_type))
+    thread = threading.Thread(
+        target=run_download,
+        args=(
+            job_id,
+            url,
+            format_type,
+            storage,
+            project_id,
+            user_id,
+            youtube_id,
+        ),
+    )
     thread.start()
 
     return jsonify({'job_id': job_id})
