@@ -120,10 +120,15 @@ def _init_jobs_db():
                 filepath TEXT,
                 filename TEXT,
                 error TEXT,
+                storage TEXT,
                 created_at REAL DEFAULT (strftime('%s','now'))
             )
         ''')
         conn.commit()
+        try:
+            conn.execute("ALTER TABLE jobs ADD COLUMN storage TEXT")
+        except sqlite3.OperationalError:
+            pass
     finally:
         conn.close()
 
