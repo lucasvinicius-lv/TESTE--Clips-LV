@@ -243,13 +243,15 @@ def run_download(job_id, url, format_type):
         if result.returncode != 0:
             set_job(job_id, status='error', error=result.stderr[-500:])
             return
-
         files = glob.glob(os.path.join(job_dir, '*'))
-        if files:
-            set_job(job_id, status='done', filepath=files[0],
-                    filename=os.path.basename(files[0]))
-        else:
+        
+        if not files:
             set_job(job_id, status='error', error='Nenhum arquivo gerado.')
+            return
+        
+        local_file = files[0]
+        filename = os.path.basename(local_file)
+      
     except subprocess.TimeoutExpired:
         set_job(job_id, status='error', error='Download excedeu o tempo limite (5 min).')
     except Exception as e:
