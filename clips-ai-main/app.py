@@ -167,14 +167,23 @@ def get_job(job_id):
     conn = _jobs_db()
     try:
         row = conn.execute(
-            'SELECT status, filepath, filename, error FROM jobs WHERE id = ?',
+            'SELECT status, filepath, filename, error, storage FROM jobs WHERE id = ?',
             (job_id,),
         ).fetchone()
     finally:
         conn.close()
     if not row:
         return None
-    return {k: row[k] for k in ('status', 'filepath', 'filename', 'error') if row[k] is not None}
+    job = {
+        k: row[k]
+        for k in ("status", "filepath", "filename", "error")
+        if row[k] is not None
+    }
+    
+    if row["storage"]:
+        job["storage"] = json.loads(row["storage"])
+
+    return job
 
 
 def cleanup_old_files():
