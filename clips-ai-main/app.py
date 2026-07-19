@@ -9,9 +9,15 @@ import tempfile
 import threading
 import time
 import uuid
+import json
+
 
 from flask import Flask, request, jsonify, send_file, Response
 from flask_cors import CORS
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_STORAGE_BUCKET = os.getenv("SUPABASE_STORAGE_BUCKET", "videos")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
